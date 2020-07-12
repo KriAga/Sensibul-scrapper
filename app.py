@@ -3,10 +3,12 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 import sys
+import csv
 from datetime import date
 from datetime import datetime
 
@@ -20,7 +22,9 @@ def get_all_values(index):
     today = date.today()
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
-    print(index, "Nifty--->  ", "delta:", delta.text, "strike:", strike.text, "iv:", iv.text, "theta:", theta.text, "premium:", premium.text, "today:", today, "current_time:", current_time)
+    with open('sensible_data.csv', mode='a') as sensible_data:
+        sensible_writer = csv.writer(sensible_data, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        sensible_writer.writerow([symbol, strike.text, premium.text.split("\n")[0], delta.text, iv.text, theta.text, today, current_time])
     driver.close()
     sys.exit(0)
 
@@ -28,7 +32,7 @@ def get_all_values(index):
 threshold = float(input("Enter cutt-off delta: "))
 delta_list = []
 threshold_found = False
-
+symbol = "Nifty" 
 driver = webdriver.Chrome(ChromeDriverManager().install())
 driver.maximize_window()
 driver.get("https://web.sensibull.com/option-chain?expiry=2020-07-16&tradingsymbol=NIFTY")
@@ -47,9 +51,9 @@ if not greek.is_selected():
     greek.click()
 print("Geek mode selected")
 
-for i in range(1, 61):
-    delta = driver.find_element(By.XPATH, "/html/body/div[1]/div/div[4]/div[2]/div[3]/div/div/div[3]/div[1]/div/div[1]/div[3]/div[" + str(i) + "]/div/div[2]")
+for i in range(1, 100):
     try:
+        delta = driver.find_element(By.XPATH, "/html/body/div[1]/div/div[4]/div[2]/div[3]/div/div/div[3]/div[1]/div/div[1]/div[3]/div[" + str(i) + "]/div/div[2]")
         delta_value = float(delta.text)
         delta_list.append(delta_value)
         if (delta_value == threshold):
@@ -58,7 +62,10 @@ for i in range(1, 61):
             get_all_values(index)
     except ValueError:
         print("Not a float -> No Delta Value:", delta.text) 
-
+    except NoSuchElementException as e:
+        print("Reached the end of the List")
+        break
+    
 if not threshold_found:
     min_diff = float('-inf')
     index = -1
