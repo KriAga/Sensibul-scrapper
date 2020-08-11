@@ -32,7 +32,7 @@ def start_driver(symbol, threshold):
     driver.maximize_window()
     driver.get("https://web.sensibull.com/option-chain?expiry=2020-07-16&tradingsymbol=" + symbol)
 
-    popup_close = WebDriverWait(driver, 10).until(
+    popup_close = WebDriverWait(driver, 100).until(
                             EC.element_to_be_clickable((By.XPATH, "/html/body/div[13]/div[3]/div/div/button")),
                             message="Close Popup"
                         )
@@ -91,8 +91,8 @@ def main(threshold):
 
 threshold = float(input("Enter cutt-off delta: "))
 # main(threshold)
-schedule.every().day.at("09:20").do(main, threshold)
-schedule.every().day.at("15:20").do(main, threshold)
+schedule.every().day.at("09:19:45").do(main, threshold)
+schedule.every().day.at("15:19:45").do(main, threshold)
 
 while True:
     schedule.run_pending()
